@@ -49,7 +49,7 @@
       <div class="instansi">{{ $a->perangkatDaerah->nama ?? '-' }} — {{ $a->labelVerifikasi() }} — {{ ucfirst($a->status) }}</div>
     </div>
     <table class="detail">
-      <tr><td class="k">Tahun / Platform / URL</td><td>{{ $a->tahun ?? '-' }} / {{ $platformList[$a->platform] ?? $a->platform }} / {{ $a->url ?? '-' }}</td></tr>
+      <tr><td class="k">Tahun / Platform / URL</td><td>{{ $a->tahun ?? '-' }} / {{ $a->platformLabel() }} / {{ $a->url ?? '-' }}</td></tr>
       @if ($a->deskripsi)<tr><td class="k">Deskripsi</td><td>{{ $a->deskripsi }}</td></tr>@endif
       <tr><td class="k">Vendor / PIC / Kontak</td><td>{{ $a->vendor ?? '-' }} / {{ $a->pic_nama ?? '-' }} / {{ $a->pic_kontak ?? '-' }}</td></tr>
       <tr><td class="k">Jumlah Pengguna</td><td>{{ $a->jumlah_pengguna ?? '-' }}</td></tr>

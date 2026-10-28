@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Aplikasi;
 use App\Models\DokumenAplikasi;
 use App\Models\PerubahanAplikasi;
 use Illuminate\Http\RedirectResponse;
@@ -173,7 +174,15 @@ class PerubahanAplikasiController extends Controller
             return $nilai ? 'Ya' : 'Tidak';
         }
 
-        if (in_array($key, ['platform', 'status'], true)) {
+        if ($key === 'platform') {
+            $platform = array_filter((array) $nilai);
+
+            return $platform
+                ? collect($platform)->map(fn ($v) => Aplikasi::PLATFORMS[$v] ?? ucfirst($v))->implode(', ')
+                : '—';
+        }
+
+        if ($key === 'status') {
             return $nilai ? ucfirst($nilai) : '—';
         }
 

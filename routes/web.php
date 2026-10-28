@@ -1,8 +1,9 @@
 <?php
 
-use App\Http\Controllers\AplikasiController;
 use App\Http\Controllers\AkunController;
+use App\Http\Controllers\AplikasiController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CaptchaController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DokumenController;
 use App\Http\Controllers\LaporanController;
@@ -14,6 +15,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('guest')->group(function () {
     Route::get('/', [AuthController::class, 'show'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.process');
+    Route::get('/captcha', [CaptchaController::class, 'image'])->name('captcha');
 });
 
 // Halaman terproteksi (harus login)

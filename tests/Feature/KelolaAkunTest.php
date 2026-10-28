@@ -148,9 +148,10 @@ class KelolaAkunTest extends TestCase
 
         // Login dengan password baru berhasil
         $this->actingAs($admin)->post(route('logout'));
-        $this->post(route('login.process'), [
+        $this->withSession(['captcha_code' => 'ABCDE'])->post(route('login.process'), [
             'username' => 'admin2',
             'password' => 'sandibaru123',
+            'captcha' => 'abcde',
         ])->assertRedirect(route('dashboard'));
         $this->assertAuthenticatedAs($admin2->fresh());
     }

@@ -4,7 +4,10 @@
 
 @section('content')
 @php
-  $adaFilter = request()->filled('q') || request()->filled('skpd') || request()->filled('tahun') || request()->filled('platform');
+  $skpdDipilih = collect((array) request('skpd', []))->filter(fn ($v) => filled($v))->map(fn ($v) => (string) $v);
+  $tahunDipilih = collect((array) request('tahun', []))->filter(fn ($v) => filled($v))->map(fn ($v) => (string) $v);
+  $platformDipilih = collect((array) request('platform', []))->filter(fn ($v) => filled($v))->map(fn ($v) => (string) $v);
+  $adaFilter = request()->filled('q') || $skpdDipilih->isNotEmpty() || $tahunDipilih->isNotEmpty() || $platformDipilih->isNotEmpty();
 @endphp
 
 <div class="space-y-5">
@@ -31,31 +34,57 @@
         </div>
       </div>
       <div>
-        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5" for="skpd">SKPD</label>
-        <select id="skpd" name="skpd" onchange="this.form.submit()" class="w-full text-sm rounded-xl border-slate-300 px-3 py-2">
-          <option value="">Semua SKPD</option>
-          @foreach ($skpdList as $skpd)
-          <option value="{{ $skpd->id }}" {{ (string) request('skpd') === (string) $skpd->id ? 'selected' : '' }}>{{ $skpd->nama }}</option>
-          @endforeach
-        </select>
+        <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">SKPD</span>
+        <details class="filter-dropdown relative">
+          <summary class="[&::-webkit-details-marker]:hidden list-none flex items-center justify-between gap-2 w-full text-sm rounded-xl border border-slate-300 bg-white px-3 py-2 cursor-pointer select-none">
+            <span class="truncate" data-summary data-default="Semua SKPD">{{ $skpdDipilih->isNotEmpty() ? $skpdDipilih->count().' SKPD dipilih' : 'Semua SKPD' }}</span>
+            <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
+          </summary>
+          <div class="absolute z-20 mt-1 w-full max-h-64 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg p-2">
+            @foreach ($skpdList as $skpd)
+            <label class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer text-sm">
+              <input type="checkbox" name="skpd[]" value="{{ $skpd->id }}" @checked($skpdDipilih->contains((string) $skpd->id)) class="rounded border-slate-300 text-blue-700 focus:ring-blue-500">
+              <span class="truncate">{{ $skpd->nama }}</span>
+            </label>
+            @endforeach
+          </div>
+        </details>
       </div>
       <div>
-        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5" for="tahun">Tahun</label>
-        <select id="tahun" name="tahun" onchange="this.form.submit()" class="w-full text-sm rounded-xl border-slate-300 px-3 py-2">
-          <option value="">Semua Tahun</option>
-          @foreach ($tahunList as $tahun)
-          <option value="{{ $tahun }}" {{ (string) request('tahun') === (string) $tahun ? 'selected' : '' }}>{{ $tahun }}</option>
-          @endforeach
-        </select>
+        <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Tahun</span>
+        <details class="filter-dropdown relative">
+          <summary class="[&::-webkit-details-marker]:hidden list-none flex items-center justify-between gap-2 w-full text-sm rounded-xl border border-slate-300 bg-white px-3 py-2 cursor-pointer select-none">
+            <span class="truncate" data-summary data-default="Semua Tahun">{{ $tahunDipilih->isNotEmpty() ? $tahunDipilih->count().' tahun dipilih' : 'Semua Tahun' }}</span>
+            <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
+          </summary>
+          <div class="absolute z-20 mt-1 w-full max-h-64 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg p-2">
+            @forelse ($tahunList as $tahun)
+            <label class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer text-sm">
+              <input type="checkbox" name="tahun[]" value="{{ $tahun }}" @checked($tahunDipilih->contains((string) $tahun)) class="rounded border-slate-300 text-blue-700 focus:ring-blue-500">
+              <span>{{ $tahun }}</span>
+            </label>
+            @empty
+            <p class="px-2 py-1.5 text-xs text-slate-400">Belum ada data tahun.</p>
+            @endforelse
+          </div>
+        </details>
       </div>
       <div>
-        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5" for="platform">Platform</label>
-        <select id="platform" name="platform" onchange="this.form.submit()" class="w-full text-sm rounded-xl border-slate-300 px-3 py-2">
-          <option value="">Semua Platform</option>
-          @foreach ($platformList as $value => $label)
-          <option value="{{ $value }}" {{ request('platform') === $value ? 'selected' : '' }}>{{ $label }}</option>
-          @endforeach
-        </select>
+        <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Platform</span>
+        <details class="filter-dropdown relative">
+          <summary class="[&::-webkit-details-marker]:hidden list-none flex items-center justify-between gap-2 w-full text-sm rounded-xl border border-slate-300 bg-white px-3 py-2 cursor-pointer select-none">
+            <span class="truncate" data-summary data-default="Semua Platform">{{ $platformDipilih->isNotEmpty() ? $platformDipilih->count().' platform dipilih' : 'Semua Platform' }}</span>
+            <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
+          </summary>
+          <div class="absolute z-20 mt-1 w-full max-h-64 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg p-2">
+            @foreach ($platformList as $value => $label)
+            <label class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer text-sm">
+              <input type="checkbox" name="platform[]" value="{{ $value }}" @checked($platformDipilih->contains((string) $value)) class="rounded border-slate-300 text-blue-700 focus:ring-blue-500">
+              <span>{{ $label }}</span>
+            </label>
+            @endforeach
+          </div>
+        </details>
       </div>
     </div>
     <div class="mt-3 flex flex-wrap items-center gap-2 justify-between">
@@ -63,15 +92,15 @@
         @if (request()->filled('q'))
         <span class="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200"><i class="fa-solid fa-magnifying-glass mr-1"></i>{{ request('q') }}</span>
         @endif
-        @if (request()->filled('skpd'))
-        <span class="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200"><i class="fa-solid fa-building mr-1"></i>{{ $skpdList->firstWhere('id', (int) request('skpd'))?->nama ?? 'SKPD' }}</span>
-        @endif
-        @if (request()->filled('tahun'))
-        <span class="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200"><i class="fa-solid fa-calendar mr-1"></i>{{ request('tahun') }}</span>
-        @endif
-        @if (request()->filled('platform'))
-        <span class="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200"><i class="fa-solid fa-mobile-screen mr-1"></i>{{ $platformList[request('platform')] ?? request('platform') }}</span>
-        @endif
+        @foreach ($skpdList->whereIn('id', $skpdDipilih->map(fn ($v) => (int) $v)) as $skpd)
+        <span class="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200"><i class="fa-solid fa-building mr-1"></i>{{ $skpd->nama }}</span>
+        @endforeach
+        @foreach ($tahunDipilih as $tahun)
+        <span class="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200"><i class="fa-solid fa-calendar mr-1"></i>{{ $tahun }}</span>
+        @endforeach
+        @foreach ($platformDipilih as $platform)
+        <span class="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200"><i class="fa-solid fa-mobile-screen mr-1"></i>{{ $platformList[$platform] ?? $platform }}</span>
+        @endforeach
         @unless ($adaFilter)
         <span class="text-[11px] text-slate-400">Pilih filter untuk mempersempit hasil.</span>
         @endunless
@@ -91,7 +120,7 @@
           <span class="text-[10px] font-bold px-2 py-0.5 rounded-full {{ $app->warnaVerifikasi() }}">{{ $app->labelVerifikasi() }}</span>
           <span class="text-[10px] font-bold px-2 py-0.5 rounded-full {{ $app->warnaStatus() }}">{{ ucfirst($app->status) }}</span>
         </div>
-        <span class="text-[10px] font-semibold text-slate-400 uppercase">{{ $app->platform }} • {{ $app->tahun ?? '-' }}</span>
+        <span class="text-[10px] font-semibold text-slate-400 uppercase">{{ $app->platformLabel() }} • {{ $app->tahun ?? '-' }}</span>
       </div>
       <p class="font-bold">{{ $app->nama }} @if($app->singkatan)<span class="text-slate-400 font-medium text-xs">({{ $app->singkatan }})</span>@endif</p>
       <p class="text-xs text-slate-500 mt-1"><i class="fa-solid fa-building mr-1"></i>{{ $app->perangkatDaerah->nama ?? '-' }}</p>
@@ -110,3 +139,41 @@
   {{ $aplikasi->links() }}
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const dropdowns = document.querySelectorAll('.filter-dropdown');
+
+  const refreshLabel = (dropdown) => {
+    const jumlah = dropdown.querySelectorAll('input[type="checkbox"]:checked').length;
+    const label = dropdown.querySelector('[data-summary]');
+    if (label) {
+      label.textContent = jumlah ? `${jumlah} dipilih` : label.dataset.default;
+    }
+  };
+
+  dropdowns.forEach((dropdown) => {
+    dropdown.addEventListener('toggle', () => {
+      if (dropdown.open) {
+        dropdowns.forEach((lain) => { if (lain !== dropdown) lain.open = false; });
+      }
+    });
+
+    dropdown.querySelectorAll('input[type="checkbox"]').forEach((checkbox) => {
+      checkbox.addEventListener('change', () => refreshLabel(dropdown));
+    });
+  });
+
+  document.addEventListener('click', (event) => {
+    dropdowns.forEach((dropdown) => {
+      if (dropdown.open && !dropdown.contains(event.target)) dropdown.open = false;
+    });
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') dropdowns.forEach((dropdown) => { dropdown.open = false; });
+  });
+});
+</script>
+@endpush

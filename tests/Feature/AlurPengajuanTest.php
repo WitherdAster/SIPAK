@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\Aplikasi;
-use App\Models\DokumenAplikasi;
 use App\Models\PerangkatDaerah;
 use App\Models\PerubahanAplikasi;
 use App\Models\User;
@@ -47,7 +46,7 @@ class AlurPengajuanTest extends TestCase
 
         $this->actingAs($skpdUser)->post(route('aplikasi.store'), [
             'nama' => 'E-Rapor Uji',
-            'platform' => 'web',
+            'platform' => ['web'],
         ])->assertRedirect(route('aplikasi.milikku'));
 
         $app = Aplikasi::where('nama', 'E-Rapor Uji')->first();
@@ -68,7 +67,7 @@ class AlurPengajuanTest extends TestCase
         $app = Aplikasi::create([
             'perangkat_daerah_id' => $skpdUser->perangkat_daerah_id,
             'nama' => 'App Terima',
-            'platform' => 'web',
+            'platform' => ['web'],
             'status' => 'aktif',
             'verifikasi' => 'diajukan',
         ]);
@@ -86,7 +85,7 @@ class AlurPengajuanTest extends TestCase
         $app = Aplikasi::create([
             'perangkat_daerah_id' => $skpdUser->perangkat_daerah_id,
             'nama' => 'App Perbaikan',
-            'platform' => 'web',
+            'platform' => ['web'],
             'status' => 'aktif',
             'verifikasi' => 'diajukan',
         ]);
@@ -135,6 +134,30 @@ class AlurPengajuanTest extends TestCase
         $this->actingAs($skpdUser)->get(route('aplikasi.create'))->assertOk();
     }
 
+    public function test_login_wajib_mengisi_captcha_dengan_benar(): void
+    {
+        [$skpdUser] = $this->buatAkun();
+
+        $this->get(route('login'))->assertOk()->assertSee('name="captcha"', false);
+        $this->get(route('captcha'))->assertOk()->assertHeader('Content-Type', 'image/png');
+
+        // Kode salah ditolak
+        $this->withSession(['captcha_code' => 'ABCDE'])->post(route('login.process'), [
+            'username' => 'disdik',
+            'password' => 'rahasia',
+            'captcha' => 'XXXXX',
+        ])->assertSessionHasErrors('captcha');
+        $this->assertGuest();
+
+        // Kode benar (huruf besar/kecil tidak dibedakan) diterima
+        $this->withSession(['captcha_code' => 'ABCDE'])->post(route('login.process'), [
+            'username' => 'disdik',
+            'password' => 'rahasia',
+            'captcha' => 'abcde',
+        ])->assertRedirect(route('dashboard'));
+        $this->assertAuthenticatedAs($skpdUser);
+    }
+
     public function test_detail_modal_hanya_untuk_yang_berhak(): void
     {
         [$skpdUser, $admin] = $this->buatAkun();
@@ -146,11 +169,11 @@ class AlurPengajuanTest extends TestCase
 
         $diterima = Aplikasi::create([
             'perangkat_daerah_id' => $skpdUser->perangkat_daerah_id, 'nama' => 'App Tayang',
-            'platform' => 'web', 'status' => 'aktif', 'verifikasi' => 'terverifikasi',
+            'platform' => ['web'], 'status' => 'aktif', 'verifikasi' => 'terverifikasi',
         ]);
         $menunggu = Aplikasi::create([
             'perangkat_daerah_id' => $skpdUser->perangkat_daerah_id, 'nama' => 'App Menunggu',
-            'platform' => 'web', 'status' => 'aktif', 'verifikasi' => 'diajukan',
+            'platform' => ['web'], 'status' => 'aktif', 'verifikasi' => 'diajukan',
         ]);
 
         // Yang diterima: instansi lain bisa lihat
@@ -170,7 +193,7 @@ class AlurPengajuanTest extends TestCase
 
         $this->actingAs($skpdUser)->post(route('aplikasi.store'), [
             'nama' => 'App Lengkap',
-            'platform' => 'web',
+            'platform' => ['web'],
             'status' => 'aktif',
             'vendor' => 'PT Maju',
             'pic_nama' => 'Budi',
@@ -217,7 +240,7 @@ class AlurPengajuanTest extends TestCase
 
         $app = Aplikasi::create([
             'perangkat_daerah_id' => $skpdUser->perangkat_daerah_id, 'nama' => 'App Kelola',
-            'platform' => 'web', 'status' => 'aktif', 'verifikasi' => 'terverifikasi',
+            'platform' => ['web'], 'status' => 'aktif', 'verifikasi' => 'terverifikasi',
         ]);
 
         // JSON detail memuat penanda admin untuk modal
@@ -259,12 +282,13 @@ class AlurPengajuanTest extends TestCase
         $this->assertNull(Aplikasi::find($app->id));
     }
 
-    public function test_status_terupdate_di_tampilan_list_dan_modal(): void    {
+    public function test_status_terupdate_di_tampilan_list_dan_modal(): void
+    {
         [$skpdUser, $admin] = $this->buatAkun();
 
         $app = Aplikasi::create([
             'perangkat_daerah_id' => $skpdUser->perangkat_daerah_id, 'nama' => 'App Tampil',
-            'platform' => 'web', 'status' => 'aktif', 'verifikasi' => 'terverifikasi',
+            'platform' => ['web'], 'status' => 'aktif', 'verifikasi' => 'terverifikasi',
         ]);
 
         $this->actingAs($admin)->put(route('aplikasi.status', $app), ['status' => 'nonaktif'])
@@ -287,11 +311,11 @@ class AlurPengajuanTest extends TestCase
 
         $diterima = Aplikasi::create([
             'perangkat_daerah_id' => $skpdUser->perangkat_daerah_id, 'nama' => 'App Riwayat Terima',
-            'platform' => 'web', 'status' => 'aktif', 'verifikasi' => 'diajukan',
+            'platform' => ['web'], 'status' => 'aktif', 'verifikasi' => 'diajukan',
         ]);
         $perbaikan = Aplikasi::create([
             'perangkat_daerah_id' => $skpdUser->perangkat_daerah_id, 'nama' => 'App Riwayat Perbaikan',
-            'platform' => 'web', 'status' => 'aktif', 'verifikasi' => 'diajukan',
+            'platform' => ['web'], 'status' => 'aktif', 'verifikasi' => 'diajukan',
         ]);
 
         $this->actingAs($admin)->post(route('verifikasi.terima', $diterima))->assertRedirect();
@@ -314,7 +338,7 @@ class AlurPengajuanTest extends TestCase
 
         $app = Aplikasi::create([
             'perangkat_daerah_id' => $skpdUser->perangkat_daerah_id, 'nama' => 'App Perbaikan',
-            'platform' => 'web', 'status' => 'aktif', 'verifikasi' => 'dikembalikan',
+            'platform' => ['web'], 'status' => 'aktif', 'verifikasi' => 'dikembalikan',
             'catatan_verifikasi' => 'Belum lengkap.',
         ]);
 
@@ -331,7 +355,7 @@ class AlurPengajuanTest extends TestCase
 
         $app = Aplikasi::create([
             'perangkat_daerah_id' => $skpdUser->perangkat_daerah_id, 'nama' => 'App Tayang',
-            'platform' => 'web', 'status' => 'aktif', 'verifikasi' => 'terverifikasi',
+            'platform' => ['web'], 'status' => 'aktif', 'verifikasi' => 'terverifikasi',
         ]);
 
         $this->actingAs($admin)->post(route('verifikasi.perbaikan', $app), [
@@ -352,7 +376,7 @@ class AlurPengajuanTest extends TestCase
 
         $app = Aplikasi::create([
             'perangkat_daerah_id' => $skpdUser->perangkat_daerah_id, 'nama' => 'App Lama',
-            'platform' => 'web', 'status' => 'aktif', 'verifikasi' => 'dikembalikan',
+            'platform' => ['web'], 'status' => 'aktif', 'verifikasi' => 'dikembalikan',
             'catatan_verifikasi' => 'Lengkapi SOP.', 'diverifikasi_at' => now(),
         ]);
 
@@ -365,13 +389,13 @@ class AlurPengajuanTest extends TestCase
         // Kirim ulang → kembali menunggu verifikasi, catatan dibersihkan
         $this->actingAs($skpdUser)->put(route('aplikasi.update', $app), [
             'nama' => 'App Baru',
-            'platform' => 'android',
+            'platform' => ['android'],
             'deskripsi' => 'Sudah diperbaiki.',
         ])->assertRedirect(route('aplikasi.milikku'));
 
         $fresh = $app->fresh();
         $this->assertSame('App Baru', $fresh->nama);
-        $this->assertSame('android', $fresh->platform);
+        $this->assertSame(['android'], $fresh->platform);
         $this->assertSame('diajukan', $fresh->verifikasi);
         $this->assertNull($fresh->catatan_verifikasi);
         $this->assertNull($fresh->diverifikasi_at);
@@ -393,7 +417,7 @@ class AlurPengajuanTest extends TestCase
 
         $app = Aplikasi::create([
             'perangkat_daerah_id' => $skpdUser->perangkat_daerah_id, 'nama' => 'App Tayang',
-            'platform' => 'web', 'status' => 'aktif', 'verifikasi' => 'terverifikasi',
+            'platform' => ['web'], 'status' => 'aktif', 'verifikasi' => 'terverifikasi',
         ]);
 
         // Pemilik boleh membuka form; instansi lain tidak
@@ -402,14 +426,14 @@ class AlurPengajuanTest extends TestCase
 
         $this->actingAs($skpdUser)->put(route('aplikasi.update', $app), [
             'nama' => 'App Tayang Revisi',
-            'platform' => 'android',
+            'platform' => ['android'],
             'deskripsi' => 'Data baru.',
         ])->assertRedirect(route('aplikasi.milikku'));
 
         // Data tayang belum berubah
         $fresh = $app->fresh();
         $this->assertSame('App Tayang', $fresh->nama);
-        $this->assertSame('web', $fresh->platform);
+        $this->assertSame(['web'], $fresh->platform);
         $this->assertSame('terverifikasi', $fresh->verifikasi);
 
         // Tersimpan sebagai pengajuan perubahan
@@ -439,11 +463,11 @@ class AlurPengajuanTest extends TestCase
 
         $app = Aplikasi::create([
             'perangkat_daerah_id' => $skpdUser->perangkat_daerah_id, 'nama' => 'App Tayang',
-            'platform' => 'web', 'status' => 'aktif', 'verifikasi' => 'terverifikasi',
+            'platform' => ['web'], 'status' => 'aktif', 'verifikasi' => 'terverifikasi',
         ]);
 
         $this->actingAs($skpdUser)->put(route('aplikasi.update', $app), [
-            'nama' => 'Revisi Satu', 'platform' => 'web',
+            'nama' => 'Revisi Satu', 'platform' => ['web'],
             'dok_sop' => UploadedFile::fake()->create('sop-baru.pdf', 100, 'application/pdf'),
         ])->assertRedirect(route('aplikasi.milikku'));
 
@@ -453,7 +477,7 @@ class AlurPengajuanTest extends TestCase
 
         // Tidak boleh menumpuk pengajuan baru
         $this->actingAs($skpdUser)->put(route('aplikasi.update', $app), [
-            'nama' => 'Revisi Dua', 'platform' => 'web',
+            'nama' => 'Revisi Dua', 'platform' => ['web'],
         ])->assertSessionHasErrors('perubahan');
         $this->assertSame(1, PerubahanAplikasi::count());
 
@@ -477,7 +501,7 @@ class AlurPengajuanTest extends TestCase
 
         $app = Aplikasi::create([
             'perangkat_daerah_id' => $skpdUser->perangkat_daerah_id, 'nama' => 'App Tayang',
-            'platform' => 'web', 'status' => 'aktif', 'verifikasi' => 'terverifikasi',
+            'platform' => ['web'], 'status' => 'aktif', 'verifikasi' => 'terverifikasi',
         ]);
         $dokumenLama = $app->dokumens()->create([
             'jenis' => 'sop', 'nama_asli' => 'sop-lama.pdf', 'path' => 'dokumen/sop-lama.pdf',
@@ -486,7 +510,7 @@ class AlurPengajuanTest extends TestCase
 
         $this->actingAs($skpdUser)->put(route('aplikasi.update', $app), [
             'nama' => 'App Baru',
-            'platform' => 'android',
+            'platform' => ['android'],
             'status' => 'aktif',
             'dok_sop' => UploadedFile::fake()->create('sop-baru.pdf', 100, 'application/pdf'),
         ])->assertRedirect();
@@ -514,7 +538,7 @@ class AlurPengajuanTest extends TestCase
 
         $fresh = $app->fresh();
         $this->assertSame('App Baru', $fresh->nama);
-        $this->assertSame('android', $fresh->platform);
+        $this->assertSame(['android'], $fresh->platform);
         $this->assertSame('terverifikasi', $fresh->verifikasi);
 
         // Dokumen lama diganti dokumen pengajuan
@@ -537,11 +561,11 @@ class AlurPengajuanTest extends TestCase
 
         $app = Aplikasi::create([
             'perangkat_daerah_id' => $skpdUser->perangkat_daerah_id, 'nama' => 'App Tayang',
-            'platform' => 'web', 'status' => 'aktif', 'verifikasi' => 'terverifikasi',
+            'platform' => ['web'], 'status' => 'aktif', 'verifikasi' => 'terverifikasi',
         ]);
 
         $this->actingAs($skpdUser)->put(route('aplikasi.update', $app), [
-            'nama' => 'App Salah', 'platform' => 'web',
+            'nama' => 'App Salah', 'platform' => ['web'],
             'dok_sop' => UploadedFile::fake()->create('sop-baru.pdf', 100, 'application/pdf'),
         ])->assertRedirect();
 
@@ -576,11 +600,11 @@ class AlurPengajuanTest extends TestCase
 
         $app = Aplikasi::create([
             'perangkat_daerah_id' => $skpdUser->perangkat_daerah_id, 'nama' => 'App Tayang',
-            'platform' => 'web', 'status' => 'aktif', 'verifikasi' => 'terverifikasi',
+            'platform' => ['web'], 'status' => 'aktif', 'verifikasi' => 'terverifikasi',
         ]);
 
         $this->actingAs($skpdUser)->put(route('aplikasi.update', $app), [
-            'nama' => 'Revisi Instansi', 'platform' => 'web',
+            'nama' => 'Revisi Instansi', 'platform' => ['web'],
             'dok_sop' => UploadedFile::fake()->create('sop-baru.pdf', 100, 'application/pdf'),
         ])->assertRedirect();
 
@@ -588,7 +612,7 @@ class AlurPengajuanTest extends TestCase
         $path = $pending->dokumenBaru()['sop']['path'];
 
         $this->actingAs($admin)->put(route('aplikasi.update', $app), [
-            'nama' => 'Edit Admin', 'platform' => 'web',
+            'nama' => 'Edit Admin', 'platform' => ['web'],
         ])->assertRedirect(route('aplikasi.index'));
 
         $this->assertSame('Edit Admin', $app->fresh()->nama);
@@ -608,11 +632,11 @@ class AlurPengajuanTest extends TestCase
 
         $app = Aplikasi::create([
             'perangkat_daerah_id' => $skpdUser->perangkat_daerah_id, 'nama' => 'App Tayang',
-            'platform' => 'web', 'status' => 'aktif', 'verifikasi' => 'terverifikasi',
+            'platform' => ['web'], 'status' => 'aktif', 'verifikasi' => 'terverifikasi',
         ]);
 
         $this->actingAs($skpdUser)->put(route('aplikasi.update', $app), [
-            'nama' => 'Revisi', 'platform' => 'web',
+            'nama' => 'Revisi', 'platform' => ['web'],
         ])->assertRedirect();
 
         $this->actingAs($lain)->post(route('aplikasi.perubahan.batal', $app))->assertForbidden();
@@ -624,10 +648,10 @@ class AlurPengajuanTest extends TestCase
         [$skpdUser] = $this->buatAkun();
         $dinkes = PerangkatDaerah::create(['nama' => 'Dinas Kesehatan', 'singkatan' => 'Dinkes']);
 
-        $dasar = ['platform' => 'web', 'status' => 'aktif', 'verifikasi' => 'terverifikasi', 'tahun' => 2024];
+        $dasar = ['platform' => ['web'], 'status' => 'aktif', 'verifikasi' => 'terverifikasi', 'tahun' => 2024];
 
         Aplikasi::create([...$dasar, 'perangkat_daerah_id' => $skpdUser->perangkat_daerah_id, 'nama' => 'App Disdik Web', 'singkatan' => 'ADW']);
-        Aplikasi::create([...$dasar, 'perangkat_daerah_id' => $dinkes->id, 'nama' => 'App Dinkes Android', 'tahun' => 2025, 'platform' => 'android']);
+        Aplikasi::create([...$dasar, 'perangkat_daerah_id' => $dinkes->id, 'nama' => 'App Dinkes Android', 'tahun' => 2025, 'platform' => ['android']]);
         Aplikasi::create([...$dasar, 'perangkat_daerah_id' => $dinkes->id, 'nama' => 'App Dinkes Web', 'tahun' => 2025]);
         Aplikasi::create([...$dasar, 'perangkat_daerah_id' => $dinkes->id, 'nama' => 'App Dinkes Lama', 'tahun' => 2023]);
 
@@ -651,7 +675,7 @@ class AlurPengajuanTest extends TestCase
 
         // Kombinasi filter
         $this->actingAs($skpdUser)->get(route('aplikasi.index', [
-            'skpd' => $dinkes->id, 'tahun' => 2025, 'platform' => 'web',
+            'skpd' => $dinkes->id, 'tahun' => 2025, 'platform' => ['web'],
         ]))->assertOk()
             ->assertSee('App Dinkes Web')
             ->assertDontSee('App Dinkes Android')
@@ -670,11 +694,11 @@ class AlurPengajuanTest extends TestCase
 
         $tayang = Aplikasi::create([
             'perangkat_daerah_id' => $skpdUser->perangkat_daerah_id, 'nama' => 'App Admin Edit',
-            'platform' => 'web', 'status' => 'aktif', 'verifikasi' => 'terverifikasi',
+            'platform' => ['web'], 'status' => 'aktif', 'verifikasi' => 'terverifikasi',
         ]);
         $perbaikan = Aplikasi::create([
             'perangkat_daerah_id' => $skpdUser->perangkat_daerah_id, 'nama' => 'App Admin Perbaikan',
-            'platform' => 'web', 'status' => 'aktif', 'verifikasi' => 'dikembalikan',
+            'platform' => ['web'], 'status' => 'aktif', 'verifikasi' => 'dikembalikan',
             'catatan_verifikasi' => 'Lengkapi SOP.',
         ]);
 
@@ -682,13 +706,13 @@ class AlurPengajuanTest extends TestCase
         $this->actingAs($admin)->get(route('aplikasi.edit', $tayang))->assertOk();
         $this->actingAs($admin)->put(route('aplikasi.update', $tayang), [
             'nama' => 'App Admin Edit Baru',
-            'platform' => 'android',
+            'platform' => ['android'],
             'deskripsi' => 'Diperbarui admin.',
         ])->assertRedirect(route('aplikasi.index'));
 
         $fresh = $tayang->fresh();
         $this->assertSame('App Admin Edit Baru', $fresh->nama);
-        $this->assertSame('android', $fresh->platform);
+        $this->assertSame(['android'], $fresh->platform);
         $this->assertSame('terverifikasi', $fresh->verifikasi);
 
         // Tetap tayang & data baru terlihat
@@ -698,7 +722,7 @@ class AlurPengajuanTest extends TestCase
         // Status perlu perbaikan & catatan tidak ikut berubah
         $this->actingAs($admin)->put(route('aplikasi.update', $perbaikan), [
             'nama' => 'App Admin Perbaikan Baru',
-            'platform' => 'web',
+            'platform' => ['web'],
         ])->assertRedirect(route('aplikasi.index'));
 
         $freshPerbaikan = $perbaikan->fresh();

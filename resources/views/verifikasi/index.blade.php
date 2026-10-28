@@ -29,7 +29,7 @@
         <div class="flex flex-wrap items-center gap-2 justify-between">
           <div>
             <p class="font-bold text-sm">{{ $app->nama }} @if($app->singkatan)<span class="text-slate-400 font-medium text-xs">({{ $app->singkatan }})</span>@endif</p>
-            <p class="text-[11px] text-slate-500 mt-0.5"><i class="fa-solid fa-building mr-1"></i>{{ $app->perangkatDaerah->nama ?? '-' }} • {{ ucfirst($app->platform) }} • {{ $app->tahun ?? '-' }}</p>
+            <p class="text-[11px] text-slate-500 mt-0.5"><i class="fa-solid fa-building mr-1"></i>{{ $app->perangkatDaerah->nama ?? '-' }} • {{ $app->platformLabel() }} • {{ $app->tahun ?? '-' }}</p>
             <p class="text-[11px] text-slate-400 mt-0.5"><i class="fa-solid fa-user mr-1"></i>Diajukan {{ $app->creator->name ?? '-' }} • {{ $app->created_at?->format('d M Y H:i') ?? '-' }}</p>
             @if ($app->deskripsi)<p class="text-xs text-slate-500 mt-1.5 line-clamp-2">{{ $app->deskripsi }}</p>@endif
           </div>

@@ -93,7 +93,7 @@ class LaporanController extends Controller
         $aplikasi = $this->query($filter, $skpdId)->orderBy('nama')->get();
         $namaBerkas = $awalan.now()->format('Ymd-His').'.pdf';
 
-        $opsi = new Options();
+        $opsi = new Options;
         $opsi->set('defaultFont', 'DejaVu Sans');
         $opsi->set('isRemoteEnabled', false);
 
@@ -120,6 +120,6 @@ class LaporanController extends Controller
             ->when($skpdId, fn ($q) => $q->where('perangkat_daerah_id', $skpdId))
             ->when($filter['status'] ?? null, fn ($q, $v) => $q->where('status', $v))
             ->when($filter['tahun'] ?? null, fn ($q, $v) => $q->where('tahun', $v))
-            ->when($filter['platform'] ?? null, fn ($q, $v) => $q->where('platform', $v));
+            ->when($filter['platform'] ?? null, fn ($q, $v) => $q->where('platform', 'like', '%"'.$v.'"%'));
     }
 }

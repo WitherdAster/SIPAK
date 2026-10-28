@@ -47,7 +47,7 @@ class AplikasiController extends Controller
             'singkatan' => $aplikasi->singkatan,
             'deskripsi' => $aplikasi->deskripsi,
             'tahun' => $aplikasi->tahun,
-            'platform' => ucfirst($aplikasi->platform),
+            'platform' => $aplikasi->platformLabel(),
             'url' => $aplikasi->url,
             'status' => ucfirst($aplikasi->status),
             'instansi' => $aplikasi->perangkatDaerah->nama ?? '-',
@@ -82,6 +82,20 @@ class AplikasiController extends Controller
      */
     public function index(Request $request): View
     {
+        $skpdDipilih = collect((array) $request->input('skpd', []))
+            ->map(fn ($id) => (int) $id)
+            ->filter()
+            ->values();
+
+        $tahunDipilih = collect((array) $request->input('tahun', []))
+            ->map(fn ($tahun) => (int) $tahun)
+            ->filter()
+            ->values();
+
+        $platformDipilih = collect((array) $request->input('platform', []))
+            ->filter(fn ($platform) => in_array($platform, ['web', 'android', 'ios', 'desktop'], true))
+            ->values();
+
         $aplikasi = Aplikasi::with('perangkatDaerah')
             ->terverifikasi()
             ->when($request->filled('q'), function ($query) use ($request) {
@@ -91,9 +105,15 @@ class AplikasiController extends Controller
                     ->where('nama', 'like', "%{$cari}%")
                     ->orWhere('singkatan', 'like', "%{$cari}%"));
             })
-            ->when($request->filled('skpd'), fn ($q) => $q->where('perangkat_daerah_id', $request->integer('skpd')))
-            ->when($request->filled('tahun'), fn ($q) => $q->where('tahun', $request->integer('tahun')))
-            ->when($request->filled('platform'), fn ($q) => $q->where('platform', $request->string('platform')->toString()))
+            ->when($skpdDipilih->isNotEmpty(), fn ($q) => $q->whereIn('perangkat_daerah_id', $skpdDipilih))
+            ->when($tahunDipilih->isNotEmpty(), fn ($q) => $q->whereIn('tahun', $tahunDipilih))
+            ->when($platformDipilih->isNotEmpty(), function ($q) use ($platformDipilih) {
+                $q->where(function ($q) use ($platformDipilih) {
+                    foreach ($platformDipilih as $platform) {
+                        $q->orWhere('platform', 'like', '%"'.$platform.'"%');
+                    }
+                });
+            })
             ->latest()
             ->paginate(12)
             ->withQueryString();
@@ -107,7 +127,7 @@ class AplikasiController extends Controller
                 ->distinct()
                 ->orderByDesc('tahun')
                 ->pluck('tahun'),
-            'platformList' => ['web' => 'Web', 'android' => 'Android', 'ios' => 'iOS', 'desktop' => 'Desktop'],
+            'platformList' => Aplikasi::PLATFORMS,
         ]);
     }
 
@@ -364,7 +384,8 @@ class AplikasiController extends Controller
             'singkatan' => ['nullable', 'string', 'max:30'],
             'deskripsi' => ['nullable', 'string'],
             'tahun' => ['nullable', 'integer', 'min:2000', 'max:2100'],
-            'platform' => ['required', 'in:web,android,ios,desktop'],
+            'platform' => ['required', 'array', 'min:1'],
+            'platform.*' => ['string', 'in:web,android,ios,desktop'],
             'url' => ['nullable', 'url', 'max:255'],
             'status' => ['sometimes', 'in:aktif,nonaktif,pengembangan'],
             // Pengelolaan

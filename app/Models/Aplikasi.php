@@ -2,13 +2,18 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Aplikasi extends Model
 {
     use HasFactory;
+
+    public const PLATFORMS = ['web' => 'Web', 'android' => 'Android', 'ios' => 'iOS', 'desktop' => 'Desktop'];
 
     protected $table = 'aplikasi';
 
@@ -49,6 +54,55 @@ class Aplikasi extends Model
         'diverifikasi_at' => 'datetime',
     ];
 
+    /**
+     * Platform disimpan sebagai daftar JSON agar satu aplikasi bisa
+     * berjalan di beberapa platform sekaligus.
+     */
+    protected function platform(): Attribute
+    {
+        return Attribute::make(
+            get: function ($value) {
+                if (is_array($value)) {
+                    $nilai = $value;
+                } elseif (! is_string($value) || $value === '') {
+                    $nilai = [];
+                } else {
+                    $decoded = json_decode($value, true);
+                    $nilai = json_last_error() === JSON_ERROR_NONE ? $decoded : $value;
+                }
+
+                $nilai = is_array($nilai) ? $nilai : [$nilai];
+
+                return array_values(array_filter(
+                    array_map(fn ($platform) => (string) $platform, $nilai),
+                    fn ($platform) => $platform !== ''
+                ));
+            },
+            set: function ($value) {
+                $nilai = is_array($value) ? $value : [$value];
+
+                $nilai = array_values(array_unique(array_filter(
+                    array_map(fn ($platform) => (string) $platform, $nilai),
+                    fn ($platform) => array_key_exists($platform, self::PLATFORMS)
+                )));
+
+                return json_encode($nilai);
+            },
+        );
+    }
+
+    /**
+     * Label platform untuk ditampilkan, mis. "Web, Android".
+     */
+    public function platformLabel(): string
+    {
+        $label = collect($this->platform)
+            ->map(fn ($platform) => self::PLATFORMS[$platform] ?? ucfirst($platform))
+            ->implode(', ');
+
+        return $label !== '' ? $label : '—';
+    }
+
     public function perangkatDaerah(): BelongsTo
     {
         return $this->belongsTo(PerangkatDaerah::class);
@@ -60,22 +114,22 @@ class Aplikasi extends Model
 
     }
 
-    public function dokumens(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function dokumens(): HasMany
     {
         return $this->hasMany(DokumenAplikasi::class);
     }
 
-    public function perubahanAplikasi(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function perubahanAplikasi(): HasMany
     {
         return $this->hasMany(PerubahanAplikasi::class);
     }
 
-    public function perubahanMenunggu(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function perubahanMenunggu(): HasOne
     {
         return $this->hasOne(PerubahanAplikasi::class)->where('status', 'menunggu')->latestOfMany();
     }
 
-    public function perubahanTerakhir(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function perubahanTerakhir(): HasOne
     {
         return $this->hasOne(PerubahanAplikasi::class)->latestOfMany();
     }
