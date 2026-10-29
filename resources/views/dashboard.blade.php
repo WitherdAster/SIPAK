@@ -17,26 +17,35 @@
         <i class="fa-solid fa-building mr-1.5"></i>{{ auth()->user()->perangkatDaerah->nama ?? 'Administrator Diskominfo' }}
       </p>
     </div>
+    @if (!(auth()->user()->role === 'admin'))
     <a href="{{ route('aplikasi.create') }}" class="text-xs font-semibold px-5 py-2.5 rounded-xl bg-amber-400 text-blue-950 hover:bg-amber-300 transition shadow-sm">
       <i class="fa-solid fa-plus mr-1.5"></i>Ajukan Aplikasi
     </a>
+    @endif
   </div>
 </div>
 
   <!-- Statistik umum -->
+   @if (!(auth()->user()->role === 'admin'))
   <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+  @elseif (auth()->user()->role === 'admin')
+  <div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
+  @endif
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
       <div class="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center mb-3"><i class="fa-solid fa-circle-check"></i></div>
       <p class="text-2xl font-extrabold">{{ $aplikasiTayang }}</p>
       <p class="text-xs text-slate-500 font-medium">Aplikasi Aktif</p>
       <p class="text-[11px] text-slate-400 mt-0.5">Sudah ditayangkan</p>
     </div>
+    @if (!(auth()->user()->role === 'admin'))
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
       <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center mb-3"><i class="fa-solid fa-folder-open"></i></div>
       <p class="text-2xl font-extrabold">{{ $aplikasiku }}</p>
       <p class="text-xs text-slate-500 font-medium">Aplikasi Instansiku</p>
       <p class="text-[11px] text-slate-400 mt-0.5">{{ auth()->user()->perangkatDaerah->nama ?? 'Administrator Diskominfo' }}</p>
     </div>
+    @endif
+
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
       <div class="w-9 h-9 rounded-xl bg-violet-100 text-violet-700 flex items-center justify-center mb-3"><i class="fa-solid fa-building"></i></div>
       <p class="text-2xl font-extrabold">{{ $totalSkpd }}</p>
