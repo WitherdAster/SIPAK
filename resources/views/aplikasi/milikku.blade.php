@@ -24,7 +24,7 @@
           <span class="text-[10px] font-bold px-2 py-0.5 rounded-full {{ $app->warnaVerifikasi() }}">{{ $app->labelVerifikasi() }}</span>
           <span class="text-[10px] font-bold px-2 py-0.5 rounded-full {{ $app->warnaStatus() }}">{{ ucfirst($app->status) }}</span>
         </div>
-        <span class="text-[10px] font-semibold text-slate-400 uppercase">{{ $app->platform }} • {{ $app->tahun ?? '-' }}</span>
+        <span class="text-[10px] font-semibold text-slate-400 uppercase">{{ $app->platformLabel() }} • {{ $app->tahun ?? '-' }}</span>
       </div>
       <p class="font-bold">{{ $app->nama }} @if($app->singkatan)<span class="text-slate-400 font-medium text-xs">({{ $app->singkatan }})</span>@endif</p>
       <p class="text-xs text-slate-400 mt-2 line-clamp-2">{{ $app->deskripsi }}</p>

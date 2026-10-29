@@ -29,13 +29,17 @@
         <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5" for="tahun">Tahun Pembuatan</label>
         <input id="tahun" name="tahun" type="number" min="2000" max="2100" value="{{ old('tahun', $lama->tahun ?? date('Y')) }}" class="w-full rounded-xl border-slate-300 text-sm">
       </div>
-      <div>
-        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5" for="platform">Platform *</label>
-        <select id="platform" name="platform" class="w-full rounded-xl border-slate-300 text-sm">
-          @foreach (['web' => 'Web', 'android' => 'Android', 'ios' => 'iOS', 'desktop' => 'Desktop'] as $val => $label)
-          <option value="{{ $val }}" {{ old('platform', $lama->platform ?? '') === $val ? 'selected' : '' }}>{{ $label }}</option>
+      <div class="sm:col-span-2">
+        <span class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">Platform *</span>
+        @php $platformDipilih = (array) old('platform', $lama?->platform ?: ['web']); @endphp
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          @foreach (\App\Models\Aplikasi::PLATFORMS as $val => $label)
+          <label class="flex items-center gap-2.5 rounded-xl border border-slate-200 px-4 py-3 cursor-pointer text-sm font-medium">
+            <input type="checkbox" name="platform[]" value="{{ $val }}" @checked(in_array($val, $platformDipilih, true)) class="rounded border-slate-300 text-blue-700 w-4 h-4">{{ $label }}
+          </label>
           @endforeach
-        </select>
+        </div>
+        <p class="text-[11px] text-slate-400 mt-1.5">Boleh pilih lebih dari satu platform.</p>
       </div>
       <div class="rounded-xl bg-slate-50 border border-slate-100 px-4 py-3 text-xs sm:col-span-2">
         <input type="hidden" name="status" value="{{ $lama->status ?? 'aktif' }}">

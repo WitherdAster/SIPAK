@@ -265,6 +265,24 @@
                   Lupa Password?
                 </a>
 </div>
+<!-- Input: Kode Verifikasi (Captcha) -->
+<div>
+<label class="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5" for="captcha">
+                  Kode Verifikasi
+                </label>
+<div class="flex items-center gap-2">
+<div class="relative rounded-xl shadow-sm flex-1">
+<div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+<i class="fa-solid fa-shield-halved text-sm"></i>
+</div>
+<input autocomplete="off" class="block w-full rounded-xl border-slate-300 pl-10 pr-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition duration-150" id="captcha" maxlength="10" name="captcha" placeholder="Ketik kode di samping" required="" type="text">
+</div>
+<button aria-label="Ganti kode verifikasi" class="shrink-0 rounded-xl border border-slate-200 overflow-hidden bg-slate-50 hover:border-blue-300 transition" id="captchaRefresh" title="Klik untuk mengganti kode" type="button">
+<img alt="Kode verifikasi" class="block h-[48px] w-[140px] object-contain" id="captchaImage" src="{{ route('captcha') }}">
+</button>
+</div>
+<p class="text-[11px] text-slate-400 mt-1">Klik gambar untuk mengganti kode.</p>
+</div>
 <!-- Submit Button (Primary Action) -->
 <div class="pt-2">
 <button class="w-full inline-flex items-center justify-center py-3 px-4 rounded-xl text-sm font-semibold tracking-wide text-white bg-blue-700 hover:bg-blue-800 active:bg-blue-900 shadow-md shadow-blue-700/30 transition-all duration-200 transform active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2" id="submitBtn" type="submit">
@@ -338,6 +356,20 @@
         forgotPasswordLink.addEventListener('click', (e) => {
           e.preventDefault();
           alert('Untuk permohonan reset kata sandi SIPAK, silakan hubungi Administrator SPBE Bidang Penyelenggaraan E-Government Diskominfo Barito Kuala melalui tiket Helpdesk atau WhatsApp resmi dinas.');
+        });
+      }
+
+      // Ganti kode captcha tanpa memuat ulang halaman
+      const captchaImage = document.getElementById('captchaImage');
+      const captchaInput = document.getElementById('captcha');
+      const captchaRefresh = document.getElementById('captchaRefresh');
+      if (captchaImage && captchaRefresh) {
+        captchaRefresh.addEventListener('click', () => {
+          captchaImage.src = @json(route('captcha')) + '?t=' + Date.now();
+          if (captchaInput) {
+            captchaInput.value = '';
+            captchaInput.focus();
+          }
         });
       }
 

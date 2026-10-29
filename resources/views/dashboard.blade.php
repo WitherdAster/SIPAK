@@ -103,7 +103,7 @@
               <span class="text-[10px] font-bold px-2 py-0.5 rounded-full {{ $app->warnaVerifikasi() }}">{{ $app->labelVerifikasi() }}</span>
               <span class="text-[10px] font-bold px-2 py-0.5 rounded-full {{ $app->warnaStatus() }}">{{ ucfirst($app->status) }}</span>
             </div>
-            <span class="text-[10px] font-semibold text-slate-400 uppercase">{{ $app->platform }}</span>
+            <span class="text-[10px] font-semibold text-slate-400 uppercase">{{ $app->platformLabel() }}</span>
           </div>
           <p class="font-bold text-sm truncate">{{ $app->nama }}</p>
           <p class="text-[11px] text-slate-500 mt-0.5"><i class="fa-solid fa-building mr-1"></i>{{ $app->perangkatDaerah->singkatan ?? '-' }}</p>
@@ -117,7 +117,7 @@
               <span class="text-[10px] font-bold px-2 py-0.5 rounded-full {{ $app->warnaVerifikasi() }}">{{ $app->labelVerifikasi() }}</span>
               <span class="text-[10px] font-bold px-2 py-0.5 rounded-full {{ $app->warnaStatus() }}">{{ ucfirst($app->status) }}</span>
             </div>
-            <span class="text-[10px] font-semibold text-slate-400 uppercase">{{ $app->platform }}</span>
+            <span class="text-[10px] font-semibold text-slate-400 uppercase">{{ $app->platformLabel() }}</span>
           </div>
           <p class="font-bold text-sm truncate">{{ $app->nama }}</p>
           <p class="text-[11px] text-slate-500 mt-0.5"><i class="fa-solid fa-building mr-1"></i>{{ $app->perangkatDaerah->singkatan ?? '-' }}</p>
